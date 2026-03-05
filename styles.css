@@ -118,11 +118,14 @@ html:not(.hs-dark-disabled) [class*="BulkActionsToolbar"] svg {
    Force icon SVGs to inherit color so they invert cleanly with the rest.
    ============================================================================= */
 
+/* Force toolbar icon SVGs to black so the html inversion flips them to white.
+   "is-color-clay" sets a dark clay hue on this toolbar; currentColor would
+   inherit that and stay dark after inversion — explicit black fixes it. */
 [data-testid="FixedToolbar"] svg,
 [data-cy="FixedToolbar"] svg,
 [class*="editor-fixed-toolbar"] svg {
-  fill: currentColor !important;
-  color: inherit !important;
+  fill: #000 !important;
+  color: #000 !important;
 }
 
 /* =============================================================================
