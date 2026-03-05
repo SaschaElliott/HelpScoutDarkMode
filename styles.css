@@ -1,0 +1,155 @@
+/* =============================================================================
+   HelpScout Dark Mode — styles.css
+   The filter on <html> inverts the whole page to dark.
+   We then un-invert specific elements that should keep their natural look.
+   DO NOT set explicit dark background-colors on child elements — they would
+   be inverted a second time, turning light again.
+   ============================================================================= */
+
+:root {
+  --hs-bg:            #1c1a17;
+  --hs-surface:       #242220;
+  --hs-elevated:      #2c2a27;
+  --hs-border:        #3a3835;
+  --hs-border-active: #4a4845;
+  --hs-text:          #e8e4de;
+  --hs-text-muted:    #b0a99f;
+  --hs-accent:        #4aabea;
+}
+
+/* =============================================================================
+   CORE: invert the entire page
+   ============================================================================= */
+
+html {
+  filter: invert(1) hue-rotate(180deg) !important;
+  color-scheme: dark !important;
+}
+
+/* =============================================================================
+   UN-INVERT: restore natural colors for media and branded elements.
+   Everything listed here gets inverted twice → back to original.
+   ============================================================================= */
+
+img,
+video,
+picture,
+svg image {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* canvas elements (charts) are NOT un-inverted — this lets the html filter
+   darken them so DOM text labels on top remain visible (light on dark). */
+
+/* Avatars that use background-image */
+[style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Emoji characters — always preserve native color */
+span[role="img"],
+.emoji,
+[class*="emoji" i],
+[data-emoji] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* =============================================================================
+   SCROLLBARS — set after invert so the values are what we actually want
+   ============================================================================= */
+
+/* Scrollbar colors are set as pre-inverted values because the html filter
+   inverts them — so #e5e5e5 (light) becomes ~#1a1a1a (dark) on screen. */
+* {
+  scrollbar-color: #aaa #e5e5e5;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e5e5e5;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+  border-radius: 4px;
+  border: 2px solid #e5e5e5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #777;
+}
+
+/* =============================================================================
+   REACTION CHIPS — dark pill with glow on hover.
+   These are un-inverted below so their background is our dark pill.
+   ============================================================================= */
+
+[class*="reaction" i],
+[class*="reactionChip" i],
+[class*="emojiChip" i],
+[class*="EmojiReaction"],
+[class*="ReactionButton"],
+button[class*="reaction" i] {
+  filter: invert(1) hue-rotate(180deg) !important;
+  outline: 1px solid rgba(255,255,255,0.15) !important;
+  border-radius: 999px !important;
+}
+
+[class*="reaction" i]:hover,
+[class*="reactionChip" i]:hover {
+  box-shadow: 0 0 6px rgba(0,0,0,0.3) !important;
+}
+
+/* =============================================================================
+   TOGGLE BUTTON — injected by content.js.
+   Double-invert so it always looks like our dark pill regardless of page state.
+   ============================================================================= */
+
+#hs-dark-toggle {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  /* These colors are pre-inverted: they'll be flipped by the html filter,
+     so pick values that look right after inversion. */
+  background-color: #e3e1de !important;  /* inverts to ~#1c1e21 dark */
+  border: 1px solid #b5b2ae !important;  /* inverts to ~#4a4d51 */
+  color: #1c1a17 !important;             /* inverts to ~#e3e5e8 */
+  font-size: 18px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.3) !important;
+  opacity: 0.7 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  font-family: sans-serif !important;
+  transition: opacity 0.15s ease !important;
+}
+
+#hs-dark-toggle:hover {
+  opacity: 1 !important;
+}
+
+/* =============================================================================
+   DISABLED STATE — remove the invert to restore full light mode
+   ============================================================================= */
+
+html.hs-dark-disabled {
+  filter: none !important;
+}
+
+html.hs-dark-disabled #hs-dark-toggle {
+  background-color: #1c1a17 !important;
+  border-color: #4a4845 !important;
+  color: #e8e4de !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+}

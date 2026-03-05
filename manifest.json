@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "HelpScout Dark Mode",
+  "version": "1.0.4",
+  "description": "Comprehensive dark mode for HelpScout",
+  "permissions": [],
+  "host_permissions": [
+    "*://*.helpscout.com/*",
+    "*://*.helpscout.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.helpscout.com/*",
+        "*://*.helpscout.net/*"
+      ],
+      "css": ["styles.css"],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css"],
+      "matches": [
+        "*://*.helpscout.com/*",
+        "*://*.helpscout.net/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
