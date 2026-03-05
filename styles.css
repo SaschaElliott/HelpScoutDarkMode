@@ -27,7 +27,7 @@ html {
 }
 
 /* =============================================================================
-   UN-INVERT: restore natural colors for media and branded elements.
+   UN-INVERT: restore natural colors for media.
    Everything listed here gets inverted twice → back to original.
    ============================================================================= */
 
@@ -38,15 +38,23 @@ svg image {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* canvas elements (charts) are NOT un-inverted — this lets the html filter
-   darken them so DOM text labels on top remain visible (light on dark). */
+/* canvas elements (charts) are NOT un-inverted — keeps DOM text labels visible */
 
 /* Avatars that use background-image */
 [style*="background-image"] {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* Emoji characters — always preserve native color */
+/* =============================================================================
+   EMOTICONS
+   HelpScout renders emoji as inline SVGs inside <span data-cy="Emoticon">.
+   The html filter inverts them (wrong color). Apply a second invert on the
+   span to cancel it out → original colors restored.
+   The SVG inside must have no own filter to avoid a third inversion.
+   ============================================================================= */
+
+/* Outer emoticon span: double-invert → html+span = 2 inversions = original */
+[data-cy="Emoticon"],
 span[role="img"],
 .emoji,
 [class*="emoji" i],
@@ -54,22 +62,17 @@ span[role="img"],
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* Emoji inside reaction chips: the chip is already double-inverted so emoji
-   inside must NOT add a third inversion — reset to none. */
-[class*="reaction" i] span[role="img"],
-[class*="reaction" i] .emoji,
-[class*="reaction" i] [class*="emoji" i],
-[class*="reactionChip" i] span[role="img"],
-[class*="EmojiReaction"] span[role="img"] {
+/* All children of the emoticon span must have no own filter —
+   the parent's double-invert handles everything */
+[data-cy="Emoticon"] * {
   filter: none !important;
 }
 
 /* =============================================================================
-   SCROLLBARS — set after invert so the values are what we actually want
+   SCROLLBARS
+   Values are pre-inverted: #e5e5e5 → appears as ~#1a1a1a after html filter.
    ============================================================================= */
 
-/* Scrollbar colors are set as pre-inverted values because the html filter
-   inverts them — so #e5e5e5 (light) becomes ~#1a1a1a (dark) on screen. */
 * {
   scrollbar-color: #aaa #e5e5e5;
 }
@@ -94,41 +97,37 @@ span[role="img"],
 }
 
 /* =============================================================================
-   REACTION CHIPS — dark pill with glow on hover.
-   These are un-inverted below so their background is our dark pill.
+   BULK ACTION TOOLBAR (hover pill on conversation rows)
+   Double-invert: dark mode → stays dark; light mode → pill goes light.
+   Only targets the bulk actions bar, NOT the editor toolbar.
    ============================================================================= */
 
-[class*="reaction" i],
-[class*="reactionChip" i],
-[class*="emojiChip" i],
-[class*="EmojiReaction"],
-[class*="ReactionButton"],
-button[class*="reaction" i] {
+[class*="BulkActionsToolbar"] {
   filter: invert(1) hue-rotate(180deg) !important;
-  outline: 1px solid rgba(255,255,255,0.15) !important;
-  border-radius: 999px !important;
 }
 
-[class*="reaction" i]:hover,
-[class*="reactionChip" i]:hover {
-  box-shadow: 0 0 6px rgba(0,0,0,0.3) !important;
+/* Dark mode only: an intermediate HelpScout filter creates a 3rd inversion,
+   making icons black. Add one more invert on the SVGs to restore white. */
+html:not(.hs-dark-disabled) [class*="BulkActionsToolbar"] svg {
+  filter: invert(1) !important;
 }
 
 /* =============================================================================
-   BULK ACTION / FLOATING TOOLBAR
-   Double-invert so it stays dark in dark mode and goes light in light mode.
-   Dark mode:  html inverts it light → element filter inverts back → original dark. ✓
-   Light mode: html filter is off   → element filter inverts black pill → light. ✓
+   EDITOR FIXED TOOLBAR (reply composer formatting bar)
+   Let the html single-inversion handle it: light bg → dark, dark icons → light.
+   Force icon SVGs to inherit color so they invert cleanly with the rest.
    ============================================================================= */
 
-[class*="BulkActionsToolbar"],
-[class*="FloatingToolbar"] {
-  filter: invert(1) hue-rotate(180deg) !important;
+[data-testid="FixedToolbar"] svg,
+[data-cy="FixedToolbar"] svg,
+[class*="editor-fixed-toolbar"] svg {
+  fill: currentColor !important;
+  color: inherit !important;
 }
 
 /* =============================================================================
    TOGGLE BUTTON — injected by content.js.
-   Double-invert so it always looks like our dark pill regardless of page state.
+   Pre-inverted colors so after the html filter they appear as intended.
    ============================================================================= */
 
 #hs-dark-toggle {
@@ -139,11 +138,9 @@ button[class*="reaction" i] {
   width: 40px !important;
   height: 40px !important;
   border-radius: 50% !important;
-  /* These colors are pre-inverted: they'll be flipped by the html filter,
-     so pick values that look right after inversion. */
-  background-color: #e3e1de !important;  /* inverts to ~#1c1e21 dark */
-  border: 1px solid #b5b2ae !important;  /* inverts to ~#4a4d51 */
-  color: #1c1a17 !important;             /* inverts to ~#e3e5e8 */
+  background-color: #e3e1de !important;
+  border: 1px solid #b5b2ae !important;
+  color: #1c1a17 !important;
   font-size: 18px !important;
   cursor: pointer !important;
   display: flex !important;
@@ -166,6 +163,17 @@ button[class*="reaction" i] {
    ============================================================================= */
 
 html.hs-dark-disabled {
+  filter: none !important;
+}
+
+/* In light mode the html filter is gone, so emoticon/emoji rules would invert
+   them once (wrong). Cancel all emoji filters when dark mode is off. */
+html.hs-dark-disabled [data-cy="Emoticon"],
+html.hs-dark-disabled [data-cy="Emoticon"] *,
+html.hs-dark-disabled span[role="img"],
+html.hs-dark-disabled .emoji,
+html.hs-dark-disabled [class*="emoji" i],
+html.hs-dark-disabled [data-emoji] {
   filter: none !important;
 }
 
