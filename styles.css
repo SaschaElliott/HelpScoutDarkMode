@@ -54,6 +54,16 @@ span[role="img"],
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
+/* Emoji inside reaction chips: the chip is already double-inverted so emoji
+   inside must NOT add a third inversion — reset to none. */
+[class*="reaction" i] span[role="img"],
+[class*="reaction" i] .emoji,
+[class*="reaction" i] [class*="emoji" i],
+[class*="reactionChip" i] span[role="img"],
+[class*="EmojiReaction"] span[role="img"] {
+  filter: none !important;
+}
+
 /* =============================================================================
    SCROLLBARS — set after invert so the values are what we actually want
    ============================================================================= */
@@ -102,6 +112,18 @@ button[class*="reaction" i] {
 [class*="reaction" i]:hover,
 [class*="reactionChip" i]:hover {
   box-shadow: 0 0 6px rgba(0,0,0,0.3) !important;
+}
+
+/* =============================================================================
+   BULK ACTION / FLOATING TOOLBAR
+   Double-invert so it stays dark in dark mode and goes light in light mode.
+   Dark mode:  html inverts it light → element filter inverts back → original dark. ✓
+   Light mode: html filter is off   → element filter inverts black pill → light. ✓
+   ============================================================================= */
+
+[class*="BulkActionsToolbar"],
+[class*="FloatingToolbar"] {
+  filter: invert(1) hue-rotate(180deg) !important;
 }
 
 /* =============================================================================
