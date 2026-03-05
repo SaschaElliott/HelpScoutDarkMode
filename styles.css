@@ -118,14 +118,13 @@ html:not(.hs-dark-disabled) [class*="BulkActionsToolbar"] svg {
    Force icon SVGs to inherit color so they invert cleanly with the rest.
    ============================================================================= */
 
-/* Force toolbar icon SVGs to black so the html inversion flips them to white.
-   "is-color-clay" sets a dark clay hue on this toolbar; currentColor would
-   inherit that and stay dark after inversion — explicit black fixes it. */
-[data-testid="FixedToolbar"] svg,
-[data-cy="FixedToolbar"] svg,
-[class*="editor-fixed-toolbar"] svg {
-  fill: #000 !important;
-  color: #000 !important;
+/* "is-color-clay" causes HelpScout to apply its own filter to this toolbar,
+   creating a 3rd inversion that flips icons back to black. Add a 4th invert
+   on the SVGs (dark mode only) so the net result is white icons. */
+html:not(.hs-dark-disabled) [data-testid="FixedToolbar"] svg,
+html:not(.hs-dark-disabled) [data-cy="FixedToolbar"] svg,
+html:not(.hs-dark-disabled) [class*="editor-fixed-toolbar"] svg {
+  filter: invert(1) !important;
 }
 
 /* =============================================================================
