@@ -128,50 +128,32 @@ html:not(.hs-dark-disabled) [class*="editor-fixed-toolbar"] svg {
 }
 
 /* =============================================================================
-   THREAD ITEM CONTENT — double-invert so plain emoji in email bodies appear
-   in their original colors. html + thread-item = 2 inversions = identity.
-   Elements that already have their own invert rule would hit 3 inversions,
-   so we cancel their filter to none inside thread-items.
+   SLATE EDITOR (reply/note composer) — double-invert so typed emoji appears
+   in original colors. html + editor = 2 inversions = identity.
+   Cancel extra inversions for elements that already have their own invert rules.
    ============================================================================= */
 
-html:not(.hs-dark-disabled) .thread-item {
+html:not(.hs-dark-disabled) [data-slate-editor="true"] {
   filter: invert(1) hue-rotate(180deg) !important;
   background-color: #000 !important;
   color: #e8e4de !important;
 }
 
-html:not(.hs-dark-disabled) .thread-item * {
+html:not(.hs-dark-disabled) [data-slate-editor="true"] * {
   color: #e8e4de !important;
 }
 
-html:not(.hs-dark-disabled) .thread-item a {
-  color: #4aabea !important;
-}
-
-/* CSAT rating badge — inside double-inverted thread-item it appears at its
-   original bright color. One extra invert brings it back to dark.
-   The emoticon inside needs one more invert to cancel (4 total = identity). */
-html:not(.hs-dark-disabled) .thread-item [data-testid="csatBadge"] {
-  filter: invert(1) hue-rotate(180deg) !important;
-}
-
-html:not(.hs-dark-disabled) .thread-item [data-testid="csatBadge"] [data-cy="Emoticon"] {
-  filter: invert(1) hue-rotate(180deg) !important;
-}
-
-html:not(.hs-dark-disabled) .thread-item img,
-html:not(.hs-dark-disabled) .thread-item video,
-html:not(.hs-dark-disabled) .thread-item picture,
-html:not(.hs-dark-disabled) .thread-item svg image,
-html:not(.hs-dark-disabled) .thread-item [style*="background-image"],
-html:not(.hs-dark-disabled) .thread-item [data-cy="Emoticon"],
-html:not(.hs-dark-disabled) .thread-item [data-cy="Emoticon"] *,
-html:not(.hs-dark-disabled) .thread-item span[role="img"],
-html:not(.hs-dark-disabled) .thread-item .emoji,
-html:not(.hs-dark-disabled) .thread-item [class*="emoji" i],
-html:not(.hs-dark-disabled) .thread-item [data-emoji] {
+html:not(.hs-dark-disabled) [data-slate-editor="true"] img,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [style*="background-image"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Emoticon"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Emoticon"] *,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] span[role="img"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] .emoji,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [class*="emoji" i],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-emoji] {
   filter: none !important;
 }
+
 
 /* =============================================================================
    SOFTENING OVERLAY — injected by content.js.

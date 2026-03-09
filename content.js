@@ -67,7 +67,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // MutationObserver for dynamically added iframes
+  // MutationObserver for dynamically added iframes and thread items
   // -------------------------------------------------------------------------
   new MutationObserver(mutations => {
     for (const m of mutations) {
@@ -75,9 +75,51 @@
         if (node.nodeType !== 1) continue;
         if (node.tagName === 'IFRAME') tryIframe(node);
         node.querySelectorAll && node.querySelectorAll('iframe').forEach(tryIframe);
+        // Fix emoji in newly added thread items
+        if (node.classList && node.classList.contains('thread-item')) fixThreadEmoji(node);
+        node.querySelectorAll && node.querySelectorAll('.thread-item').forEach(fixThreadEmoji);
       }
     }
   }).observe(document.documentElement, { childList: true, subtree: true });
+
+  // -------------------------------------------------------------------------
+  // Emoji fix — wrap plain Unicode emoji in thread items with a correcting
+  // span so they get 2 inversions (html + span) = identity = original colors.
+  // Only splits text nodes; never touches elements or layout.
+  // -------------------------------------------------------------------------
+  const EMOJI_RE = /(\p{Extended_Pictographic}\p{Emoji_Modifier}?)/gu;
+
+  function fixThreadEmoji(root) {
+    if (isDarkEnabled && !isDarkEnabled()) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) {
+      if (!n.textContent.match(EMOJI_RE)) continue;
+      if (n.parentElement && n.parentElement.closest('[data-slate-editor]')) continue;
+      if (n.parentElement && n.parentElement.closest('[data-hs-emoji]')) continue;
+      nodes.push(n);
+    }
+    for (const textNode of nodes) wrapEmojiInNode(textNode);
+  }
+
+  function wrapEmojiInNode(textNode) {
+    const text = textNode.textContent;
+    const re = new RegExp(EMOJI_RE.source, 'gu');
+    const frag = document.createDocumentFragment();
+    let last = 0, match;
+    while ((match = re.exec(text)) !== null) {
+      if (match.index > last) frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+      const span = document.createElement('span');
+      span.setAttribute('data-hs-emoji', '');
+      span.style.cssText = 'filter:invert(1) hue-rotate(180deg);display:inline';
+      span.textContent = match[0];
+      frag.appendChild(span);
+      last = re.lastIndex;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    if (frag.childNodes.length > 1) textNode.parentNode.replaceChild(frag, textNode);
+  }
 
   // -------------------------------------------------------------------------
   // Dark mode state — stored on <html> class
@@ -131,6 +173,7 @@
     applyState(isDarkEnabled());
     createOverlay();
     createToggle();
+    document.querySelectorAll('.thread-item').forEach(fixThreadEmoji);
   }
 
   if (document.body) {
