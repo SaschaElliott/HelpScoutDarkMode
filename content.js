@@ -11,12 +11,11 @@
 
   // CSS injected directly into reply-editor iframes
   const IFRAME_STYLES = `
-    html { filter: invert(1) hue-rotate(180deg) !important; background: #1c1a17 !important; }
-    body { background-color: #1c1a17 !important; color: #e8e4de !important; }
-    img, video, canvas { filter: invert(1) hue-rotate(180deg) !important; }
-    span[role="img"], .emoji, [class*="emoji"] {
+    html { filter: invert(1) hue-rotate(180deg) !important; }
+    body {
       filter: invert(1) hue-rotate(180deg) !important;
-      color: unset !important;
+      background-color: #2c2a27 !important;
+      color: #e8e4de !important;
     }
     a { color: #4aabea !important; }
     blockquote, .gmail_quote {
@@ -98,6 +97,16 @@
   }
 
   // -------------------------------------------------------------------------
+  // Softening overlay (lifts blacks to gray without shifting hues)
+  // -------------------------------------------------------------------------
+  function createOverlay() {
+    if (document.getElementById('hs-dark-overlay')) return;
+    const el = document.createElement('div');
+    el.id = 'hs-dark-overlay';
+    document.body.appendChild(el);
+  }
+
+  // -------------------------------------------------------------------------
   // Toggle button
   // -------------------------------------------------------------------------
   function createToggle() {
@@ -120,6 +129,7 @@
   function init() {
     scanIframes();
     applyState(isDarkEnabled());
+    createOverlay();
     createToggle();
   }
 
@@ -133,6 +143,7 @@
   const patch = (orig) => function (...args) {
     orig.apply(this, args);
     requestAnimationFrame(() => {
+      if (!document.getElementById('hs-dark-overlay')) createOverlay();
       if (!document.getElementById(TOGGLE_ID)) createToggle();
       applyState(isDarkEnabled());
       scanIframes();
@@ -142,6 +153,7 @@
   history.replaceState = patch(history.replaceState);
   window.addEventListener('popstate', () => {
     requestAnimationFrame(() => {
+      if (!document.getElementById('hs-dark-overlay')) createOverlay();
       if (!document.getElementById(TOGGLE_ID)) createToggle();
       applyState(isDarkEnabled());
       scanIframes();
