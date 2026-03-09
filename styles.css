@@ -159,8 +159,15 @@ html:not(.hs-dark-disabled) [data-slate-editor="true"] {
   color: #e8e4de !important;
 }
 
-html:not(.hs-dark-disabled) [data-slate-editor="true"] * {
+html:not(.hs-dark-disabled) [data-slate-editor="true"] *:not(a) {
   color: #e8e4de !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] a,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Link"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] a *,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Link"] * {
+  color: #4aabea !important;
 }
 
 /* Inline code pasted from help pages: give them a dark background so they
