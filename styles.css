@@ -69,6 +69,26 @@ span[role="img"],
 }
 
 /* =============================================================================
+   EMOJI REACTION PICKER
+   The picker container has class "emoji-picker" which matches [class*="emoji"]
+   above → double-invert → renders in original light colors ✓ for the backdrop.
+   But child elements (emoji-grid-row, is-emoji-grid, etc.) also contain "emoji"
+   in their class, adding extra inversions (3+) that break the emoji glyph colors.
+   Fix: cancel all extra inversions inside the picker so everything sits at
+   exactly 2 inversions (html + picker container) = original appearance.
+   ============================================================================= */
+
+html:not(.hs-dark-disabled) [class*="emoji-picker"] [class*="emoji"],
+html:not(.hs-dark-disabled) [class*="emoji-picker"] span[role="img"],
+html:not(.hs-dark-disabled) [class*="emoji-picker"] [data-cy="Emoticon"],
+html:not(.hs-dark-disabled) [class*="emoji-picker"] [data-cy="Emoticon"] *,
+html:not(.hs-dark-disabled) [class*="emoji-picker"] [data-emoji],
+html:not(.hs-dark-disabled) [class*="emoji-picker"] .emoji,
+html:not(.hs-dark-disabled) [class*="emoji-picker"] img {
+  filter: none !important;
+}
+
+/* =============================================================================
    SCROLLBARS
    Values are pre-inverted: #e5e5e5 → appears as ~#1a1a1a after html filter.
    ============================================================================= */
@@ -140,6 +160,13 @@ html:not(.hs-dark-disabled) [data-slate-editor="true"] {
 }
 
 html:not(.hs-dark-disabled) [data-slate-editor="true"] * {
+  color: #e8e4de !important;
+}
+
+/* Inline code pasted from help pages: give them a dark background so they
+   don't appear as blinding white boxes inside the double-inverted editor. */
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="InlineCode"] {
+  background-color: #3a3835 !important;
   color: #e8e4de !important;
 }
 
