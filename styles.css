@@ -147,6 +147,48 @@ html:not(.hs-dark-disabled) [class*="editor-fixed-toolbar"] svg {
 }
 
 /* =============================================================================
+   CONTEXTUAL (FLOATING) TOOLBAR — appears above selected text in the editor.
+   HelpScout renders it with is-color-charcoal (dark bg → inverts to white).
+   Override the background to a light clay tone so the html single-inversion
+   produces the same dark warm appearance as the static FixedToolbar.
+   Apply the same SVG invert fix as FixedToolbar (HelpScout adds its own filter
+   on charcoal buttons creating a 3rd inversion; a 4th restores white icons).
+   ============================================================================= */
+
+/* Dark mode: override charcoal bg (→ white after inversion) to clay-like warm tone */
+html:not(.hs-dark-disabled) [data-cy="ContextualToolbar"] {
+  background-color: #e5e1dc !important;
+}
+
+html:not(.hs-dark-disabled) [data-cy="ContextualToolbar"] button,
+html:not(.hs-dark-disabled) [data-cy="ContextualToolbar"] button * {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #1c1a17 !important;
+}
+
+html:not(.hs-dark-disabled) [data-cy="ContextualToolbar"] svg {
+  filter: invert(1) !important;
+}
+
+/* Light mode: charcoal popup looks jarring. Match the clay/FixedToolbar appearance:
+   warm light background, transparent button fills, dark icons. */
+html.hs-dark-disabled [data-cy="ContextualToolbar"] {
+  background-color: #f0ebe5 !important;
+  border-color: #ddd6cf !important;
+}
+
+html.hs-dark-disabled [data-cy="ContextualToolbar"] button {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+html.hs-dark-disabled [data-cy="ContextualToolbar"] button,
+html.hs-dark-disabled [data-cy="ContextualToolbar"] button * {
+  color: #3d3935 !important;
+}
+
+/* =============================================================================
    SLATE EDITOR (reply/note composer) — double-invert so typed emoji appears
    in original colors. html + editor = 2 inversions = identity.
    Cancel extra inversions for elements that already have their own invert rules.
@@ -273,6 +315,17 @@ html:not(.hs-dark-disabled) #nav-main button,
 html:not(.hs-dark-disabled) #nav-main [class*="NavLink"],
 html:not(.hs-dark-disabled) #nav-main [class*="Button__Text"] {
   color: #1c1a17 !important;
+}
+
+/* Help button uses is-color-white: its SVG is white → after html inversion → black.
+   Add invert(1) to restore a visible white icon. Suppress the hover box which
+   inverts badly against the custom header background. */
+html:not(.hs-dark-disabled) [data-cy="DropList.NavLinkIconToggler"] svg {
+  filter: invert(1) !important;
+}
+html:not(.hs-dark-disabled) [data-cy="DropList.NavLinkIconToggler"]:hover {
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 /* =============================================================================
@@ -403,7 +456,7 @@ html.hs-dark-disabled #hs-dark-overlay {
 
 #hs-dark-toggle {
   position: fixed !important;
-  bottom: 20px !important;
+  bottom: 72px !important;
   right: 20px !important;
   z-index: 2147483647 !important;
   width: 40px !important;
@@ -446,6 +499,7 @@ html.hs-dark-disabled svg image,
 html.hs-dark-disabled [style*="background-image"] {
   filter: none !important;
 }
+
 
 /* In light mode, reset the code block double-invert added above. */
 html.hs-dark-disabled pre,
