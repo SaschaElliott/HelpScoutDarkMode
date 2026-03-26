@@ -23,7 +23,6 @@
 
 html {
   filter: invert(1) hue-rotate(180deg) !important;
-  color-scheme: dark !important;
 }
 
 /* =============================================================================
@@ -157,6 +156,7 @@ html:not(.hs-dark-disabled) [data-slate-editor="true"] {
   filter: invert(1) hue-rotate(180deg) !important;
   background-color: #000 !important;
   color: #e8e4de !important;
+  color-scheme: light !important;
 }
 
 html:not(.hs-dark-disabled) [data-slate-editor="true"] *:not(a) {
@@ -168,6 +168,13 @@ html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Link"],
 html:not(.hs-dark-disabled) [data-slate-editor="true"] a *,
 html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Link"] * {
   color: #4aabea !important;
+}
+
+/* @mention pills: override the global #e8e4de text color back to dark so the
+   text is readable against the pill's light background (double-invert = identity). */
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="MentionElement"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="MentionElement"] * {
+  color: #1c1a17 !important;
 }
 
 /* Inline code pasted from help pages: give them a dark background so they
@@ -188,6 +195,187 @@ html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-emoji] {
   filter: none !important;
 }
 
+/* =============================================================================
+   DOCS EDITOR — Callout boxes
+   Inside the double-inverted Slate editor (net 0 inversions = original colors),
+   HelpScout's light callout backgrounds show through. Force dark backgrounds.
+   ============================================================================= */
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"] {
+  background-color: #1e1c1a !important;
+  border-left-color: #4a4845 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="yellow"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-yellow {
+  background-color: #2a2200 !important;
+  border-left-color: #8a6800 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="red"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-red {
+  background-color: #2a0a08 !important;
+  border-left-color: #8a2020 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="blue"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-blue {
+  background-color: #001830 !important;
+  border-left-color: #1a6080 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="green"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-green {
+  background-color: #0a1e0a !important;
+  border-left-color: #206020 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="purple"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-purple {
+  background-color: #1a0830 !important;
+  border-left-color: #6020a0 !important;
+}
+
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"][color="gray"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="Callout"].is-gray {
+  background-color: #1a1a1a !important;
+  border-left-color: #555 !important;
+}
+
+/* =============================================================================
+   HEADER SOFTENING — reduce the jarring contrast between the lavender nav bar
+   and the dark page body.
+   Strategy: override only the background-color with its pre-inverted equivalent
+   so the header appears as a dark muted purple after the html filter, rather
+   than bright lavender.  Child elements (icons, text, avatars) are unaffected
+   because we are NOT changing their filter — they continue to be handled by the
+   rules above.
+   Pre-inverted target: #bbb0db → appears as ~#2e2650 (dark muted indigo) after
+   invert(1) hue-rotate(180deg).
+   ============================================================================= */
+
+html:not(.hs-dark-disabled) #header,
+html:not(.hs-dark-disabled) #nav-main {
+  background-color: #bbb0db !important;
+  border-bottom-color: #a89fcb !important;
+}
+
+/* Nav text is light-blue (#9ecbff range) which after inversion reads as mid-blue —
+   too close to the dark indigo background. Override to near-black pre-inverted,
+   which appears as near-white after the html filter. */
+html:not(.hs-dark-disabled) #header a,
+html:not(.hs-dark-disabled) #header button,
+html:not(.hs-dark-disabled) #header [class*="NavLink"],
+html:not(.hs-dark-disabled) #header [class*="NavToggler"],
+html:not(.hs-dark-disabled) #header [class*="Button__Text"],
+html:not(.hs-dark-disabled) #nav-main a,
+html:not(.hs-dark-disabled) #nav-main button,
+html:not(.hs-dark-disabled) #nav-main [class*="NavLink"],
+html:not(.hs-dark-disabled) #nav-main [class*="Button__Text"] {
+  color: #1c1a17 !important;
+}
+
+/* =============================================================================
+   CODE BLOCKS — outside the Slate editor (thread / email view)
+   Code blocks commonly ship with a dark syntax-highlight background.
+   After a single html inversion that dark background becomes white → hard to
+   read.  Double-invert to restore the original dark appearance.
+   ============================================================================= */
+
+html:not(.hs-dark-disabled) pre,
+html:not(.hs-dark-disabled) [data-cy="CodeBlock"],
+html:not(.hs-dark-disabled) [class*="CodeBlock"]:not([data-slate-editor] *) {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Inside the Slate editor the container is already double-inverted (net 0).
+   Adding a third inversion would re-break things, so reset the filter and
+   instead set explicit dark colors directly (they appear as-set at net 0). */
+html:not(.hs-dark-disabled) [data-slate-editor="true"] pre,
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-cy="CodeBlock"],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [class*="CodeBlock"] {
+  filter: none !important;
+  background-color: #1e1c1a !important;
+  color: #e8e4de !important;
+  border-radius: 4px !important;
+}
+
+/* =============================================================================
+   AI TRANSLATE — highlighted text turns white while the translation is running.
+   Fix 1: override ::selection so the active text highlight is a dark muted blue
+          (pre-inverted #5b8db8 → appears as ~dark-steel-blue after html filter)
+          with white text (black pre-inverted → white after inversion).
+   Fix 2: force text color back to the standard dark-mode text value on any
+          element HelpScout marks as "translating" / "processing".
+   ============================================================================= */
+
+/* AI Translate custom highlight — JS marks selected spans with data-hs-translate-sel
+   when the dialog opens.  In the double-inverted editor T² ≈ identity, so
+   these colors appear roughly as-set: dark navy background, warm off-white text. */
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-hs-translate-sel],
+html:not(.hs-dark-disabled) [data-slate-editor="true"] [data-hs-translate-sel] * {
+  background-color: #264f78 !important;
+  color: #e8e4de !important;
+}
+
+/* While translating, hide the OS selection (which ignores CSS filters and
+   appears white).  The custom highlight above takes its place. */
+html:not(.hs-dark-disabled) body[data-hs-translating] [data-slate-editor="true"] ::selection {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Selection: use a dark navy that reads as clearly visible in both contexts —
+   single-inverted (rest of page) and double-inverted (Slate editor).
+   After 2 inversions #264f78 stays ~#264f78 (dark blue, visible on dark editor).
+   After 1 inversion it becomes a medium blue-grey, also readable.
+   White text works in both: after 2 inversions → white; after 1 → black. */
+html:not(.hs-dark-disabled) ::selection {
+  background-color: #264f78 !important;
+  color: #ffffff !important;
+}
+
+/* =============================================================================
+   PRINT / SAVE AS PDF — disable all dark mode filters so the printed output
+   is light.  Without this the html invert filter makes the whole page black.
+   Applies in both dark and light mode (no harm either way).
+   ============================================================================= */
+
+@media print {
+  html {
+    filter: none !important;
+    color-scheme: light !important;
+  }
+
+  #hs-dark-overlay,
+  #hs-dark-toggle {
+    display: none !important;
+  }
+
+  /* Once the html filter is gone every element-level double-invert rule would
+     invert things once (wrong).  Reset them all so the page renders normally. */
+  img,
+  video,
+  picture,
+  svg image,
+  [style*="background-image"],
+  [data-cy="Emoticon"],
+  [data-hs-emoji],
+  span[role="img"],
+  .emoji,
+  [class*="emoji" i],
+  [data-emoji],
+  [class*="BulkActionsToolbar"],
+  [data-testid="FixedToolbar"] svg,
+  [data-cy="FixedToolbar"] svg,
+  [class*="editor-fixed-toolbar"] svg,
+  [data-slate-editor="true"],
+  pre,
+  [data-cy="CodeBlock"],
+  [class*="CodeBlock"] {
+    filter: none !important;
+  }
+}
 
 /* =============================================================================
    SOFTENING OVERLAY — injected by content.js.
@@ -256,6 +444,13 @@ html.hs-dark-disabled video,
 html.hs-dark-disabled picture,
 html.hs-dark-disabled svg image,
 html.hs-dark-disabled [style*="background-image"] {
+  filter: none !important;
+}
+
+/* In light mode, reset the code block double-invert added above. */
+html.hs-dark-disabled pre,
+html.hs-dark-disabled [data-cy="CodeBlock"],
+html.hs-dark-disabled [class*="CodeBlock"] {
   filter: none !important;
 }
 

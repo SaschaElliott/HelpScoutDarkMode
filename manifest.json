@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HelpScout Dark Mode",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Comprehensive dark mode for HelpScout",
   "permissions": [],
   "host_permissions": [

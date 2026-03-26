@@ -31,6 +31,13 @@
       color: #e8e4de !important;
       caret-color: #e8e4de !important;
     }
+    ::selection {
+      background-color: #264f78 !important;
+      color: #ffffff !important;
+    }
+    @media print {
+      html, body { filter: none !important; }
+    }
   `;
 
   // -------------------------------------------------------------------------
@@ -75,9 +82,16 @@
         if (node.nodeType !== 1) continue;
         if (node.tagName === 'IFRAME') tryIframe(node);
         node.querySelectorAll && node.querySelectorAll('iframe').forEach(tryIframe);
-        // Fix emoji in newly added thread items
-        if (node.classList && node.classList.contains('thread-item')) fixThreadEmoji(node);
-        node.querySelectorAll && node.querySelectorAll('.thread-item').forEach(fixThreadEmoji);
+        // Fix emoji in newly added thread items and search/conversation list rows
+        if (node.classList && (
+          node.classList.contains('thread-item') ||
+          node.classList.contains('is-theme-default') ||
+          node.classList.contains('preview') ||
+          /ConversationCell/i.test(node.className)
+        )) fixThreadEmoji(node);
+        node.querySelectorAll && node.querySelectorAll(
+          '.thread-item, .is-theme-default, .preview, [class*="ConversationCell"]'
+        ).forEach(fixThreadEmoji);
       }
     }
   }).observe(document.documentElement, { childList: true, subtree: true });
@@ -139,6 +153,108 @@
   }
 
   // -------------------------------------------------------------------------
+  // AI Translate selection highlight fix
+  // The OS renders the selection highlight outside the CSS filter pipeline,
+  // so ::selection CSS cannot fix the white appearance.
+  // Instead: when the translate dialog opens we capture the selection range,
+  // mark the selected slate-string spans with data-hs-translate-sel, and use
+  // CSS to show a visible highlight on those spans.  We also make ::selection
+  // transparent (via body[data-hs-translating]) so the OS white box is hidden.
+  // -------------------------------------------------------------------------
+  // Save the last editor selection so we can restore it after the toolbar click
+  // clears the native selection before the translate dialog fully opens.
+  let _savedTranslateRange = null;
+
+  function markTranslateSelection() {
+    if (document.body.hasAttribute('data-hs-translating')) return;
+    const editor = document.querySelector('[data-slate-editor="true"]');
+    if (!editor) return;
+
+    // Prefer the live selection; fall back to the last saved one.
+    let range = null;
+    try {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) range = sel.getRangeAt(0);
+    } catch (_) {}
+    if (!range) range = _savedTranslateRange;
+    if (!range) return;
+
+    let marked = false;
+    try {
+      // Target [data-slate-leaf="true"] — the element that actually turns white.
+      editor.querySelectorAll('[data-slate-leaf="true"]').forEach(span => {
+        if (range.intersectsNode(span)) {
+          span.setAttribute('data-hs-translate-sel', '');
+          marked = true;
+        }
+      });
+    } catch (_) {}
+    if (marked) document.body.setAttribute('data-hs-translating', '');
+  }
+
+  function clearTranslateSelection() {
+    document.body.removeAttribute('data-hs-translating');
+    document.querySelectorAll('[data-hs-translate-sel]').forEach(el => {
+      el.removeAttribute('data-hs-translate-sel');
+    });
+  }
+
+  function watchTranslateDialog() {
+    const DIALOG_SEL = '[aria-labelledby="aiAssistDialogTitle"]';
+
+    // Keep the saved range up to date whenever the user selects text in the editor.
+    document.addEventListener('selectionchange', () => {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        const editor = document.querySelector('[data-slate-editor="true"]');
+        if (editor && editor.contains(range.commonAncestorContainer)) {
+          _savedTranslateRange = range.cloneRange();
+        }
+      } catch (_) {}
+    });
+
+    new MutationObserver(() => {
+      const dialog = document.querySelector(DIALOG_SEL);
+      if (dialog && dialog.classList.contains('is-open')) {
+        markTranslateSelection();
+      } else {
+        clearTranslateSelection();
+      }
+    }).observe(document.body, {
+      childList: true, subtree: true,
+      attributes: true, attributeFilter: ['class']
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Selection style override for AI Translate
+  // Injected as a <style> tag so it loads last and wins the cascade over
+  // HelpScout's own ::selection rules.
+  // The Slate editor is double-inverted (html + editor filter = net 0), so
+  // the values here are the actual desired display colors (#264f78 bg, white text).
+  // -------------------------------------------------------------------------
+  function injectSelectionStyle() {
+    if (document.getElementById('hs-dark-selection')) return;
+    const s = document.createElement('style');
+    s.id = 'hs-dark-selection';
+    // Appended to <body> so it sits later in the cascade than any <head> styles,
+    // including HelpScout's dynamically injected ones.
+    // Target the actual Slate text spans directly for maximum specificity.
+    s.textContent = `
+      [data-slate-editor="true"] [data-slate-string="true"]::selection,
+      [data-slate-editor="true"] [data-slate-leaf="true"]::selection,
+      [data-slate-editor="true"] span::selection,
+      [data-slate-editor="true"]::selection {
+        background-color: #264f78 !important;
+        color: #ffffff !important;
+      }
+    `;
+    document.body.appendChild(s);
+  }
+
+  // -------------------------------------------------------------------------
   // Softening overlay (lifts blacks to gray without shifting hues)
   // -------------------------------------------------------------------------
   function createOverlay() {
@@ -171,9 +287,17 @@
   function init() {
     scanIframes();
     applyState(isDarkEnabled());
-    createOverlay();
-    createToggle();
-    document.querySelectorAll('.thread-item').forEach(fixThreadEmoji);
+    // Overlay, toggle, and selection style only belong in the top-level frame.
+    // Sidebar widgets (Shopify, Birdie, etc.) are iframes — skip them.
+    if (window === window.top) {
+      createOverlay();
+      createToggle();
+      injectSelectionStyle();
+      watchTranslateDialog();
+    }
+    document.querySelectorAll(
+      '.thread-item, .is-theme-default, .preview, [class*="ConversationCell"]'
+    ).forEach(fixThreadEmoji);
   }
 
   if (document.body) {
@@ -182,25 +306,27 @@
     document.addEventListener('DOMContentLoaded', init);
   }
 
-  // SPA navigation support
-  const patch = (orig) => function (...args) {
-    orig.apply(this, args);
-    requestAnimationFrame(() => {
-      if (!document.getElementById('hs-dark-overlay')) createOverlay();
-      if (!document.getElementById(TOGGLE_ID)) createToggle();
-      applyState(isDarkEnabled());
-      scanIframes();
+  // SPA navigation support (top-level frame only)
+  if (window === window.top) {
+    const patch = (orig) => function (...args) {
+      orig.apply(this, args);
+      requestAnimationFrame(() => {
+        if (!document.getElementById('hs-dark-overlay')) createOverlay();
+        if (!document.getElementById(TOGGLE_ID)) createToggle();
+        applyState(isDarkEnabled());
+        scanIframes();
+      });
+    };
+    history.pushState    = patch(history.pushState);
+    history.replaceState = patch(history.replaceState);
+    window.addEventListener('popstate', () => {
+      requestAnimationFrame(() => {
+        if (!document.getElementById('hs-dark-overlay')) createOverlay();
+        if (!document.getElementById(TOGGLE_ID)) createToggle();
+        applyState(isDarkEnabled());
+        scanIframes();
+      });
     });
-  };
-  history.pushState    = patch(history.pushState);
-  history.replaceState = patch(history.replaceState);
-  window.addEventListener('popstate', () => {
-    requestAnimationFrame(() => {
-      if (!document.getElementById('hs-dark-overlay')) createOverlay();
-      if (!document.getElementById(TOGGLE_ID)) createToggle();
-      applyState(isDarkEnabled());
-      scanIframes();
-    });
-  });
+  }
 
 })();
