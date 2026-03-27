@@ -73,6 +73,7 @@
     document.querySelectorAll('iframe').forEach(tryIframe);
   }
 
+
   // -------------------------------------------------------------------------
   // MutationObserver for dynamically added iframes and thread items
   // -------------------------------------------------------------------------
@@ -285,6 +286,15 @@
   // Init
   // -------------------------------------------------------------------------
   function init() {
+    // PDF attachment pages: Chrome's PDF plugin renders outside the CSS filter
+    // pipeline. Detect by URL (the embed is injected dynamically so DOM queries
+    // at document_end find nothing). Force light mode without touching
+    // localStorage so dark mode stays active on all other pages.
+    if (/\/api\/v1\/conversations\/\d+\/attachments\/\d+\/file/.test(window.location.href)) {
+      document.documentElement.classList.add(DISABLED_CLASS);
+      return;
+    }
+
     scanIframes();
     applyState(isDarkEnabled());
     // Overlay, toggle, and selection style only belong in the top-level frame.
